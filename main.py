@@ -1,6 +1,6 @@
 import argparse
-from fuzzer.config import FuzzerConfig
-from fuzzer.fuzzer_engine import FuzzerEngine
+from config import FuzzerConfig
+from fuzzer_engine import FuzzerEngine
 
 def main():
     parser = argparse.ArgumentParser(description="Java Coverage-Based Fuzzer（对接ASM插桩）")

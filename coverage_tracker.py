@@ -1,5 +1,5 @@
 # fuzzer/coverage_tracker.py（修改后，对接Java插桩）
-from typing import Set, Optional, Dict
+from typing import Set, Optional, Dict, Tuple
 import json
 
 class CoverageTracker:

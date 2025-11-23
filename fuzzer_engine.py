@@ -1,10 +1,10 @@
 # fuzzer/fuzzer_engine.py（修改后）
-from fuzzer.config import FuzzerConfig
-from fuzzer.coverage_tracker import CoverageTracker
-from fuzzer.input_generator import InputGenerator
-from fuzzer.java_runner import JavaRunner
-from fuzzer.corpus_manager import CorpusManager
-from fuzzer.error_detector import ErrorDetector
+from config import FuzzerConfig
+from coverage_tracker import CoverageTracker
+from input_generator import InputGenerator
+from java_runner import JavaRunner
+from corpus_manager import CorpusManager
+from error_detector import ErrorDetector
 
 class FuzzerEngine:
     def __init__(self, config: FuzzerConfig):

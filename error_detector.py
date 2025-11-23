@@ -1,5 +1,5 @@
 # fuzzer/error_detector.py（修改后）
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set
 import hashlib
 
 class ErrorDetector:
