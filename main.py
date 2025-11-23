@@ -88,7 +88,8 @@ def main():
     )
 
     fuzzer = FuzzerEngine(config)
-    fuzzer.run()
+    # fuzzer.run()
+    fuzzer.run2()
 
 if __name__ == "__main__":
     main()
