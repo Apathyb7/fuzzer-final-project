@@ -5,7 +5,7 @@ import os
 from typing import Tuple, Optional, Dict
 
 class JavaRunner:
-    def __init__(self, java_class_path: str, target_class: str, coverage_output_path: str = "coverage_temp.json"):
+    def __init__(self, java_class_path: str, target_class: str, config, coverage_output_path: str = "coverage_temp.json"):
         """
         :param java_class_path: Java类路径（如"bin:lib/asm.jar"，包含插桩后的类文件）
         :param target_class: 目标类名（如"com.test.DivisionLoop"）
@@ -13,6 +13,7 @@ class JavaRunner:
         """
         self.java_class_path = java_class_path
         self.target_class = target_class
+        self.config = config # 传入 FuzzerConfig对象
         self.coverage_output_path = coverage_output_path
         # 确保覆盖率输出文件不存在残留
         if os.path.exists(coverage_output_path):
@@ -61,3 +62,53 @@ class JavaRunner:
             return None, f"Java程序执行超时（超过5秒）"
         except Exception as e:
             return None, f"Python调用Java失败：{str(e)}"
+
+    def run_java_program2(self, input_data: str):
+        """
+        使用插桩代理执行Java程序，并返回执行结果。
+        """
+        # 1. 定义插桩代理和输出文件的路径 (从配置中读取)
+        agent_path = self.config.agent_path
+        shm_path = self.config.coverage_output_path
+        map_path = self.config.map_output_path
+        edge_path = self.config.edge_coverage_path
+
+        # 2. 构建 -javaagent 参数字符串
+        agent_args = (
+            f"-javaagent:{agent_path}="
+            f"size=65536,"
+            f"shm={os.path.abspath(shm_path)},"
+            f"map={os.path.abspath(map_path)},"
+            f"map.append=false,"
+            f"perEdge=true,"
+            f"perEdgePath={os.path.abspath(edge_path)}"
+        )
+
+        # 3. 构建完整的Java执行命令列表
+        command = [
+            "java",
+            agent_args,
+            "-cp",
+            self.java_class_path,
+            self.target_class,
+            str(input_data)  # 确保输入是字符串
+        ]
+
+        # 4. 执行命令
+        try:
+            # 在每次执行前，清空旧的边覆盖率文件，确保只统计本次执行
+            if os.path.exists(edge_path):
+                os.remove(edge_path)
+
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=5  # 设置一个超时，防止程序卡死
+            )
+            # 返回标准错误，因为Java的异常堆栈通常输出到stderr
+            return result.stderr
+        except subprocess.TimeoutExpired:
+            return "Error: Java process timed out."
+        except Exception as e:
+            return f"Error: Failed to run Java process. {e}"
