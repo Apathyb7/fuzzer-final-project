@@ -18,12 +18,12 @@ class CoverageTracker:
         调用Java程序，跟踪覆盖率并捕获异常
         :param java_runner: JavaRunner实例（负责调用Java程序）
         :param input_data: 测试用例输入
-        :return: (has_new_coverage: 是否有新分支覆盖, error_msg: 异常信息（无则None）)
+        :return: (has_new_coverage: 是否有新分支覆盖, error_msg_str: 异常信息（无则None）)
         """
         # 1. 调用Java程序，获取本次执行的覆盖率和异常
-        coverage_data, error_msg = java_runner.run_java_program(input_data)
+        coverage_data, error_msg_str = java_runner.run_java_program(input_data)
         if not coverage_data or "covered_branches" not in coverage_data:
-            return False, error_msg  # 无覆盖率数据，视为无新覆盖
+            return False, error_msg_str  # 无覆盖率数据，视为无新覆盖
 
         # 2. 提取本次执行的新分支
         current_branches = set(coverage_data["covered_branches"])
@@ -32,14 +32,14 @@ class CoverageTracker:
         if has_new_coverage:
             self.covered_branches.update(current_branches)  # 更新全局覆盖分支
 
-        return has_new_coverage, error_msg
+        return has_new_coverage, error_msg_str
 
     def track_execution2(self, java_runner, new_input):
         """
         执行、读取覆盖率文件并判断是否有新覆盖。
         """
         # 1. 执行Java程序
-        error_msg = java_runner.run_java_program2(new_input)
+        trace, error_msg_str = java_runner.run_java_program2(new_input)
 
         # 2. 读取并解析边覆盖率文件 (per-edge.csv)
         has_new_coverage = False
@@ -47,7 +47,7 @@ class CoverageTracker:
 
         if not os.path.exists(edge_file):
             # 如果文件不存在，说明执行可能失败或没有产生覆盖率信息
-            return False, error_msg
+            return False, error_msg_str
 
         with open(edge_file, 'r') as f:
             reader = csv.reader(f)
@@ -69,8 +69,8 @@ class CoverageTracker:
 
         # 3. 返回结果
         # 如果有错误信息，说明可能触发了bug
-        is_error = bool(error_msg and "Exception" in error_msg)
-        return has_new_coverage, error_msg if is_error else None
+        is_error = bool(error_msg_str and "Exception" in error_msg_str)
+        return has_new_coverage, error_msg_str if is_error else None
 
     def get_coverage_stats(self) -> Dict:
         """返回覆盖率统计信息"""

@@ -19,51 +19,53 @@ class JavaRunner:
         if os.path.exists(coverage_output_path):
             os.remove(coverage_output_path)
 
-    def run_java_program(self, input_data: int) -> Tuple[Optional[Dict], Optional[str]]:
-        """
-        运行插桩后的Java程序，返回覆盖率数据和异常信息
-        :param input_data: 测试用例输入（适配Java程序的int参数）
-        :return: (coverage_data: 覆盖率分支列表字典, error_msg: 异常信息（无则None）)
-        """
-        # 1. 构造Java执行命令（如：java -cp bin:lib/asm.jar com.test.DivisionLoop 1024）
-        cmd = [
-            "java",
-            "-cp", self.java_class_path,
-            self.target_class,
-            str(input_data)  # 传递输入参数（Java程序需读取命令行参数）
-        ]
+    # def run_java_program(self, input_data: int, method: Optional[str] = None) -> Tuple[Optional[Dict], Optional[str]]:
+    #     """
+    #     运行插桩后的Java程序，返回覆盖率数据和异常信息
+    #     :param input_data: 测试用例输入（适配Java程序的int参数）
+    #     :return: (coverage_data: 覆盖率分支列表字典, error_msg: 异常信息（无则None）)
+    #     """
+    #     # 1. 构造Java执行命令（如：java -cp bin:lib/asm.jar com.test.DivisionLoop 1024）
+    #     cmd = [
+    #         "java",
+    #         "-cp", self.java_class_path,
+    #         self.target_class,
+    #     ]
+    #     if method is not None:
+    #         cmd.append(method)
+    #     cmd.append(str(input_data))
 
-        try:
-            # 2. 执行Java程序，捕获stdout（正常输出）和stderr（异常输出）
-            result = subprocess.run(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=5  # 超时控制（避免死循环）
-            )
+    #     try:
+    #         # 2. 执行Java程序，捕获stdout（正常输出）和stderr（异常输出）
+    #         result = subprocess.run(
+    #             cmd,
+    #             stdout=subprocess.PIPE,
+    #             stderr=subprocess.PIPE,
+    #             text=True,
+    #             timeout=5  # 超时控制（避免死循环）
+    #         )
 
-            # 3. 读取异常信息（Java程序抛出的异常会打印到stderr）
-            error_msg = None
-            if result.returncode != 0:  # 返回码非0表示执行异常
-                error_msg = f"Java执行异常（返回码{result.returncode}）：{result.stderr.strip()}"
+    #         # 3. 读取异常信息（Java程序抛出的异常会打印到stderr）
+    #         error_msg = None
+    #         if result.returncode != 0:  # 返回码非0表示执行异常
+    #             error_msg = f"Java执行异常（返回码{result.returncode}）：{result.stderr.strip()}"
 
-            # 4. 读取覆盖率数据（插桩程序执行后写入的文件）
-            coverage_data = None
-            if os.path.exists(self.coverage_output_path):
-                with open(self.coverage_output_path, "r", encoding="utf-8") as f:
-                    coverage_data = json.load(f)  # 预期格式：{"covered_branches": ["类:方法:行:分支ID", ...]}
-                # 读取后删除临时文件，避免残留
-                os.remove(self.coverage_output_path)
+    #         # 4. 读取覆盖率数据（插桩程序执行后写入的文件）
+    #         coverage_data = None
+    #         if os.path.exists(self.coverage_output_path):
+    #             with open(self.coverage_output_path, "r", encoding="utf-8") as f:
+    #                 coverage_data = json.load(f)  # 预期格式：{"covered_branches": ["类:方法:行:分支ID", ...]}
+    #             # 读取后删除临时文件，避免残留
+    #             os.remove(self.coverage_output_path)
 
-            return coverage_data, error_msg
+    #         return coverage_data, error_msg
 
-        except subprocess.TimeoutExpired:
-            return None, f"Java程序执行超时（超过5秒）"
-        except Exception as e:
-            return None, f"Python调用Java失败：{str(e)}"
+    #     except subprocess.TimeoutExpired:
+    #         return None, f"Java程序执行超时（超过5秒）"
+    #     except Exception as e:
+    #         return None, f"Python调用Java失败：{str(e)}"
 
-    def run_java_program2(self, input_data: str):
+    def run_java_program2(self, input_data: str, method: Optional[str] = None):
         """
         使用插桩代理执行Java程序，并返回执行结果。
         """
@@ -71,7 +73,7 @@ class JavaRunner:
         agent_path = self.config.agent_path
         shm_path = self.config.coverage_output_path
         map_path = self.config.map_output_path
-        edge_path = self.config.edge_coverage_path
+        edge_coverage_path = self.config.edge_coverage_path
 
         # 2. 构建 -javaagent 参数字符串
         agent_args = (
@@ -81,7 +83,7 @@ class JavaRunner:
             f"map={os.path.abspath(map_path)},"
             f"map.append=false,"
             f"perEdge=true,"
-            f"perEdgePath={os.path.abspath(edge_path)}"
+            f"perEdgePath={os.path.abspath(edge_coverage_path)}"
         )
 
         # 3. 构建完整的Java执行命令列表
@@ -91,24 +93,53 @@ class JavaRunner:
             "-cp",
             self.java_class_path,
             self.target_class,
-            str(input_data)  # 确保输入是字符串
-        ]
+        ] 
+                
+        if method:  
+            command.append(method)
+        if not isinstance(input_data, list):
+            input_data = [input_data]
+        command.extend(map(str, input_data))
+
+        os.makedirs(os.path.dirname(edge_coverage_path), exist_ok=True)
+
+        if os.path.exists(edge_coverage_path):
+            os.remove(edge_coverage_path)
 
         # 4. 执行命令
         try:
-            # 在每次执行前，清空旧的边覆盖率文件，确保只统计本次执行
-            if os.path.exists(edge_path):
-                os.remove(edge_path)
-
             result = subprocess.run(
                 command,
                 capture_output=True,
                 text=True,
-                timeout=5  # 设置一个超时，防止程序卡死
+                timeout=self.config.timeout  # 设置一个超时，防止程序卡死
             )
-            # 返回标准错误，因为Java的异常堆栈通常输出到stderr
-            return result.stderr
+
+            error_msg = None
+            if result.returncode != 0:
+                error_msg = f"Java执行异常 (返回码: {result.returncode}): {result.stderr.strip()}"
+
+            # 读取并解析覆盖率文件，提取执行轨迹（trace）
+            trace = []
+            if os.path.exists(edge_coverage_path):
+                with open(edge_coverage_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            # 假设 per-edge.csv 的格式是 "source_offset,target_offset"
+                            # 我们可以提取 source_offset 作为轨迹的一部分
+                            parts = line.split(",")
+                            if len(parts) >= 1:
+                                try:
+                                    trace.append(int(parts[0]))
+                                except ValueError:
+                                    # 如果格式不正确，忽略这条记录
+                                    pass
+            
+            # 返回执行轨迹和错误信息
+            return trace, error_msg
+
         except subprocess.TimeoutExpired:
-            return "Error: Java process timed out."
+            return None, f"Java程序执行超时 (超过 {self.config.timeout} 秒)"
         except Exception as e:
-            return f"Error: Failed to run Java process. {e}"
+            return None, f"调用Java程序失败: {str(e)}"

@@ -10,7 +10,7 @@ class InputGenerator:
         """
         self.input_type = input_type
         self.random = random.Random()
-        self.random.seed(42)  # 固定种子，保证可复现性
+        self.random.seed(42)  # 固定种子，保证可复现性  
 
     def generate_seeds(self, count: int = 100) -> List[Any]:
         """
