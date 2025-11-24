@@ -10,6 +10,9 @@ def main():
     # Fuzz参数
     parser.add_argument("--max-iter", type=int, default=10000, help="最大迭代次数")
     parser.add_argument("--seed-count", type=int, default=100, help="初始种子数量")
+
+    # 位图
+    parser.add_argument("--coverage-map-size", type=int, default=65536, help="覆盖率位图的大小")
     args = parser.parse_args()
 
     # 初始化配置
@@ -17,7 +20,8 @@ def main():
         java_class_path=args.java_class_path,
         target_class=args.target_class,
         max_iterations=args.max_iter,
-        seed_count=args.seed_count
+        seed_count=args.seed_count,
+        coverage_map_size=args.coverage_map_size
     )
 
     # 启动fuzzer

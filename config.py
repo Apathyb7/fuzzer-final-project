@@ -9,7 +9,8 @@ class FuzzerConfig:
         timeout: float = 5.0,
         seed_count: int = 100,
         mutate_count: int = 5,
-        max_iterations: int = 10000
+        max_iterations: int = 10000,
+        coverage_map_size: int = 65536
     ):
         # 目标java项目编译后的jar包路径
         self.java_class_path = java_class_path
@@ -22,6 +23,9 @@ class FuzzerConfig:
         self.max_iterations = max_iterations
 
         # --- 新增：插桩相关配置 ---
+        # 位图大小
+        self.coverage_map_size = coverage_map_size
+
         # 建议使用绝对路径或相对于项目根目录的路径
         # Agent jar包
         self.agent_path = "./bytescribe-agent-1.0-SNAPSHOT.jar"
