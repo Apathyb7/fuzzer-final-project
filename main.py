@@ -13,6 +13,11 @@ def main():
     parser.add_argument("--target-class", default="com.test.DivisionLoop", help="目标Java类名（含包名）")
     parser.add_argument("--coverage-output", default="coverage_temp.json", help="覆盖率输出JSON路径或文件名")
     parser.add_argument("--max-iter", type=int, default=10, help="最大迭代次数")
+    parser.add_argument("--target-method", default="jpamb.cases.Simple.divideByN:(I)I", help="目标测试Java方法（带包名，类名，出入参类型）")
+    parser.add_argument("--agent-path", default="./bytescribe-agent-1.0-SNAPSHOT.jar", help="插桩Agent jar包路径")
+
+    # Fuzz参数
+    parser.add_argument("--max-iter", type=int, default=10000, help="最大迭代次数")
     parser.add_argument("--seed-count", type=int, default=100, help="初始种子数量")
 
     # 位图
@@ -89,8 +94,9 @@ def main():
 
     config = FuzzerConfig(
         java_class_path=args.java_class_path,
-        target_class=args.target_class,
         # coverage_output_path=args.coverage_output,
+        target_method=args.target_method,
+        agent_path=args.agent_path,
         max_iterations=args.max_iter,
         seed_count=args.seed_count,
         coverage_map_size=args.coverage_map_size
