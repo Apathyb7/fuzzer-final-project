@@ -1,1 +1,1 @@
-{"run_id": "test_case_001", "status": "ok", "error": null, "data": {"method": "org.dtu.pa.demo.DemoTarget.divideByN:(I)I", "inputs": [1024], "trace": []}, "time_ms": 1469}
+{"run_id": "", "status": "error", "error": {"message": "Java执行异常 (返回码: 1): 错误: 在类 org.dtu.pa.demo.DemoTarget2 中找不到 main 方法, 请将 main 方法定义为:\n   public static void main(String[] args)\n否则 JavaFX 应用程序类必须扩展javafx.application.Application"}, "data": {"method": "org.dtu.pa.demo.DemoTarget2.main", "inputs": [], "trace": []}, "time_ms": 373}

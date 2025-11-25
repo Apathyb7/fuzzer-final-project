@@ -14,6 +14,9 @@ def main():
     parser.add_argument("--coverage-output", default="coverage_temp.json", help="覆盖率输出JSON路径或文件名")
     parser.add_argument("--max-iter", type=int, default=10, help="最大迭代次数")
     parser.add_argument("--seed-count", type=int, default=100, help="初始种子数量")
+
+    # 位图
+    parser.add_argument("--coverage-map-size", type=int, default=65536, help="覆盖率位图的大小")
     parser.add_argument("--driver", action="store_true", help="启用单次驱动模式")
     parser.add_argument("--driver-input", default=None, help="驱动模式输入JSON路径；为'-'时从stdin读取")
     parser.add_argument("--driver-output", default=None, help="驱动模式输出JSON路径；缺省时stdout")
@@ -89,7 +92,8 @@ def main():
         target_class=args.target_class,
         # coverage_output_path=args.coverage_output,
         max_iterations=args.max_iter,
-        seed_count=args.seed_count
+        seed_count=args.seed_count,
+        coverage_map_size=args.coverage_map_size
     )
 
     fuzzer = FuzzerEngine(config)
